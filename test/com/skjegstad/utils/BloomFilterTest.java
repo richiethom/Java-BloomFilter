@@ -15,15 +15,20 @@
 
 package com.skjegstad.utils;
 
-import java.nio.charset.Charset;
-import java.util.BitSet;
-import java.util.List;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-import java.util.ArrayList;
+
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Tests for BloomFilter.java

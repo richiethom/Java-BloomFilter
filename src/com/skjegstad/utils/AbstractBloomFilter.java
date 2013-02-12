@@ -37,7 +37,7 @@ import java.util.Collection;
  * @param <E> Object type that is to be inserted into the Bloom filter, e.g. String or Integer.
  * @author Magnus Skjegstad <magnus@skjegstad.com>
  */
-public class BloomFilter<E> implements Serializable {
+public class AbstractBloomFilter<E> implements Serializable {
     private BitSet bitset;
     private int bitSetSize;
     private double bitsPerElement;
@@ -67,7 +67,7 @@ public class BloomFilter<E> implements Serializable {
       * @param expectedSize is the expected number of elements the filter will contain.
       * @param hashFunctionCount is the number of hash functions used.
       */
-    public BloomFilter(double bitsPerElement, int expectedSize, int hashFunctionCount) {
+    public AbstractBloomFilter(double bitsPerElement, int expectedSize, int hashFunctionCount) {
       this.expectedNumberOfFilterElements = expectedSize;
       this.hashFunctionCount = hashFunctionCount;
       this.bitsPerElement = bitsPerElement;
@@ -83,7 +83,7 @@ public class BloomFilter<E> implements Serializable {
      * @param bitSetSize defines how many bits should be used in total for the filter.
      * @param expectedNumberOElements defines the maximum number of elements the filter is expected to contain.
      */
-    public BloomFilter(int bitSetSize, int expectedNumberOElements) {
+    public AbstractBloomFilter(int bitSetSize, int expectedNumberOElements) {
         this(bitSetSize / (double)expectedNumberOElements,
              expectedNumberOElements,
              (int) Math.round((bitSetSize / (double)expectedNumberOElements) * Math.log(2.0)));
@@ -97,7 +97,7 @@ public class BloomFilter<E> implements Serializable {
      * @param falsePositiveProbability is the desired false positive probability.
      * @param expectedNumberOfElements is the expected number of elements in the Bloom filter.
      */
-    public BloomFilter(double falsePositiveProbability, int expectedNumberOfElements) {
+    public AbstractBloomFilter(double falsePositiveProbability, int expectedNumberOfElements) {
         this(Math.ceil(-(Math.log(falsePositiveProbability) / Math.log(2))) / Math.log(2), // c = k / ln(2)
              expectedNumberOfElements,
              (int)Math.ceil(-(Math.log(falsePositiveProbability) / Math.log(2)))); // k = ceil(-log_2(false prob.))
@@ -111,7 +111,7 @@ public class BloomFilter<E> implements Serializable {
      * @param actualNumberOfFilterElements specifies how many elements have been inserted into the <code>filterData</code> BitSet.
      * @param filterData a BitSet representing an existing Bloom filter.
      */
-    public BloomFilter(int bitSetSize, int expectedNumberOfFilterElements, int actualNumberOfFilterElements, BitSet filterData) {
+    public AbstractBloomFilter(int bitSetSize, int expectedNumberOfFilterElements, int actualNumberOfFilterElements, BitSet filterData) {
         this(bitSetSize, expectedNumberOfFilterElements);
         this.bitset = filterData;
         this.numberOfAddedElements = actualNumberOfFilterElements;
@@ -197,7 +197,7 @@ public class BloomFilter<E> implements Serializable {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final BloomFilter<E> other = (BloomFilter<E>) obj;        
+        final AbstractBloomFilter<E> other = (AbstractBloomFilter<E>) obj;        
         if (this.expectedNumberOfFilterElements != other.expectedNumberOfFilterElements) {
             return false;
         }

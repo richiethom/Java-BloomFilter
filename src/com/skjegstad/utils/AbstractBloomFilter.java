@@ -37,13 +37,13 @@ import java.util.Collection;
  * @param <E> Object type that is to be inserted into the Bloom filter, e.g. String or Integer.
  * @author Magnus Skjegstad <magnus@skjegstad.com>
  */
-public class AbstractBloomFilter<E> implements Serializable {
-    private BitSet bitset;
-    private int bitSetSize;
-    private double bitsPerElement;
-    private int expectedNumberOfFilterElements; // expected (maximum) number of elements to be added
-    private int numberOfAddedElements; // number of elements actually added to the Bloom filter
-    private int hashFunctionCount; // number of hash functions
+abstract class AbstractBloomFilter<E> implements Serializable {
+    protected BloomData bloomData;
+    protected int bitSetSize;
+    protected double bitsPerElement;
+    protected int numberOfAddedElements; // number of elements actually added to the Bloom filter
+    protected int expectedNumberOfFilterElements; // expected (maximum) number of elements to be added
+    protected int hashFunctionCount; // number of hash functions
 
     static final Charset charset = Charset.forName("UTF-8"); // encoding used for storing hash values as strings
 
@@ -58,64 +58,14 @@ public class AbstractBloomFilter<E> implements Serializable {
         }
         digestFunction = tmp;
     }
-
-    /**
-      * Constructs an empty Bloom filter. The total length of the Bloom filter will be
-      * c*n.
-      *
-      * @param bitsPerElement is the number of bits used per element.
-      * @param expectedSize is the expected number of elements the filter will contain.
-      * @param hashFunctionCount is the number of hash functions used.
-      */
-    public AbstractBloomFilter(double bitsPerElement, int expectedSize, int hashFunctionCount) {
-      this.expectedNumberOfFilterElements = expectedSize;
-      this.hashFunctionCount = hashFunctionCount;
-      this.bitsPerElement = bitsPerElement;
-      this.bitSetSize = (int)Math.ceil(bitsPerElement * expectedSize);
-      numberOfAddedElements = 0;
-      this.bitset = new BitSet(bitSetSize);
-    }
-
-    /**
-     * Constructs an empty Bloom filter. The optimal number of hash functions (k) is estimated from the total size of the Bloom
-     * and the number of expected elements.
-     *
-     * @param bitSetSize defines how many bits should be used in total for the filter.
-     * @param expectedNumberOElements defines the maximum number of elements the filter is expected to contain.
-     */
-    public AbstractBloomFilter(int bitSetSize, int expectedNumberOElements) {
-        this(bitSetSize / (double)expectedNumberOElements,
-             expectedNumberOElements,
-             (int) Math.round((bitSetSize / (double)expectedNumberOElements) * Math.log(2.0)));
-    }
-
-    /**
-     * Constructs an empty Bloom filter with a given false positive probability. The number of bits per
-     * element and the number of hash functions is estimated
-     * to match the false positive probability.
-     *
-     * @param falsePositiveProbability is the desired false positive probability.
-     * @param expectedNumberOfElements is the expected number of elements in the Bloom filter.
-     */
-    public AbstractBloomFilter(double falsePositiveProbability, int expectedNumberOfElements) {
-        this(Math.ceil(-(Math.log(falsePositiveProbability) / Math.log(2))) / Math.log(2), // c = k / ln(2)
-             expectedNumberOfElements,
-             (int)Math.ceil(-(Math.log(falsePositiveProbability) / Math.log(2)))); // k = ceil(-log_2(false prob.))
-    }
-
-    /**
-     * Construct a new Bloom filter based on existing Bloom filter data.
-     *
-     * @param bitSetSize defines how many bits should be used for the filter.
-     * @param expectedNumberOfFilterElements defines the maximum number of elements the filter is expected to contain.
-     * @param actualNumberOfFilterElements specifies how many elements have been inserted into the <code>filterData</code> BitSet.
-     * @param filterData a BitSet representing an existing Bloom filter.
-     */
-    public AbstractBloomFilter(int bitSetSize, int expectedNumberOfFilterElements, int actualNumberOfFilterElements, BitSet filterData) {
-        this(bitSetSize, expectedNumberOfFilterElements);
-        this.bitset = filterData;
-        this.numberOfAddedElements = actualNumberOfFilterElements;
-    }
+    
+    protected AbstractBloomFilter(int expectedSize, int hashFunctionCount, double bitsPerElement, int bitSetSize) {
+    	this.expectedNumberOfFilterElements = expectedSize;
+    	this.bitSetSize = bitSetSize;
+    	this.hashFunctionCount = hashFunctionCount;
+    	this.bitsPerElement = bitsPerElement;
+    	numberOfAddedElements = 0;
+	}
 
     /**
      * Generates a digest based on the contents of a String.
@@ -184,51 +134,6 @@ public class AbstractBloomFilter<E> implements Serializable {
     }
 
     /**
-     * Compares the contents of two instances to see if they are equal.
-     *
-     * @param obj is the object to compare to.
-     * @return True if the contents of the objects are equal.
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final AbstractBloomFilter<E> other = (AbstractBloomFilter<E>) obj;        
-        if (this.expectedNumberOfFilterElements != other.expectedNumberOfFilterElements) {
-            return false;
-        }
-        if (this.hashFunctionCount != other.hashFunctionCount) {
-            return false;
-        }
-        if (this.bitSetSize != other.bitSetSize) {
-            return false;
-        }
-        if (this.bitset != other.bitset && (this.bitset == null || !this.bitset.equals(other.bitset))) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Calculates a hash code for this class.
-     * @return hash code representing the contents of an instance of this class.
-     */
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 61 * hash + (this.bitset != null ? this.bitset.hashCode() : 0);
-        hash = 61 * hash + this.expectedNumberOfFilterElements;
-        hash = 61 * hash + this.bitSetSize;
-        hash = 61 * hash + this.hashFunctionCount;
-        return hash;
-    }
-
-
-    /**
      * Calculates the expected probability of false positives based on
      * the number of expected filter elements and the size of the Bloom filter.
      * <br /><br />
@@ -284,7 +189,7 @@ public class AbstractBloomFilter<E> implements Serializable {
      * Sets all bits to false in the Bloom filter.
      */
     public void clear() {
-        bitset.clear();
+        bloomData.clear();
         numberOfAddedElements = 0;
     }
 
@@ -305,8 +210,9 @@ public class AbstractBloomFilter<E> implements Serializable {
      */
     public void add(byte[] bytes) {
        int[] hashes = createHashes(bytes, hashFunctionCount);
-       for (int hash : hashes)
-           bitset.set(Math.abs(hash % bitSetSize), true);
+       for (int hash : hashes) {
+		bloomData.set(Math.abs(hash % bitSetSize));
+	}
        numberOfAddedElements ++;
     }
 
@@ -342,7 +248,8 @@ public class AbstractBloomFilter<E> implements Serializable {
     public boolean contains(byte[] bytes) {
         int[] hashes = createHashes(bytes, hashFunctionCount);
         for (int hash : hashes) {
-            if (!bitset.get(Math.abs(hash % bitSetSize))) {
+            final int abs = Math.abs(hash % bitSetSize);
+			if (!bloomData.setForHash(abs)) {
                 return false;
             }
         }
@@ -369,7 +276,7 @@ public class AbstractBloomFilter<E> implements Serializable {
      * @return true if the bit is set, false if it is not.
      */
     public boolean getBit(int bit) {
-        return bitset.get(bit);
+        return bloomData.getBit(bit);
     }
 
     /**
@@ -378,7 +285,7 @@ public class AbstractBloomFilter<E> implements Serializable {
      * @param value If true, the bit is set. If false, the bit is cleared.
      */
     public void setBit(int bit, boolean value) {
-        bitset.set(bit, value);
+        bloomData.setBit(bit, value);
     }
 
     /**
@@ -386,7 +293,7 @@ public class AbstractBloomFilter<E> implements Serializable {
      * @return bit set representing the Bloom filter.
      */
     public BitSet getBitSet() {
-        return bitset;
+        return bloomData.toBitSet();
     }
 
     /**

@@ -46,7 +46,7 @@ public class BloomFilterTest {
             double c = r.nextInt(20) + 1;
             int n = r.nextInt(10000) + 1;
             int k = r.nextInt(20) + 1;
-            AbstractBloomFilter bf = new AbstractBloomFilter(c, n, k);
+            BloomFilter bf = new BloomFilter(c, n, k);
             assertEquals(bf.getK(), k);
             assertEquals(bf.getExpectedBitsPerElement(), c, 0);
             assertEquals(bf.getExpectedNumberOfElements(), n);
@@ -63,13 +63,13 @@ public class BloomFilterTest {
     public void testCreateHash_String() throws Exception {
         System.out.println("createHash");
         String val = UUID.randomUUID().toString();
-        int result1 = AbstractBloomFilter.createHash(val);
-        int result2 = AbstractBloomFilter.createHash(val);
+        int result1 = BloomFilter.createHash(val);
+        int result2 = BloomFilter.createHash(val);
         assertEquals(result2, result1);
-        int result3 = AbstractBloomFilter.createHash(UUID.randomUUID().toString());
+        int result3 = BloomFilter.createHash(UUID.randomUUID().toString());
         assertNotSame(result3, result2);
 
-        int result4 = AbstractBloomFilter.createHash(val.getBytes("UTF-8"));
+        int result4 = BloomFilter.createHash(val.getBytes("UTF-8"));
         assertEquals(result4, result1);
     }
 
@@ -82,8 +82,8 @@ public class BloomFilterTest {
         System.out.println("createHash");
         String val = UUID.randomUUID().toString();
         byte[] data = val.getBytes("UTF-8");
-        int result1 = AbstractBloomFilter.createHash(data);
-        int result2 = AbstractBloomFilter.createHash(val);
+        int result1 = BloomFilter.createHash(data);
+        int result2 = BloomFilter.createHash(val);
         assertEquals(result1, result2);
     }
 
@@ -96,12 +96,12 @@ public class BloomFilterTest {
         System.out.println("createHashes");
         String val = UUID.randomUUID().toString();
         byte[] data = val.getBytes("UTF-8");
-        int[] result1 = AbstractBloomFilter.createHashes(data, 10);
-        int[] result2 = AbstractBloomFilter.createHashes(data, 10);
+        int[] result1 = BloomFilter.createHashes(data, 10);
+        int[] result2 = BloomFilter.createHashes(data, 10);
         assertEquals(result1.length, 10);
         assertEquals(result2.length, 10);
         assertArrayEquals(result1, result2);
-        int[] result3 = AbstractBloomFilter.createHashes(data, 5);
+        int[] result3 = BloomFilter.createHashes(data, 5);
         assertEquals(result3.length, 5);
         for (int i = 0; i < result3.length; i++)
             assertEquals(result3[i], result1[i]);
@@ -115,8 +115,8 @@ public class BloomFilterTest {
     @Test
     public void testEquals() throws UnsupportedEncodingException {
         System.out.println("equals");
-        AbstractBloomFilter instance1 = new AbstractBloomFilter(1000, 100);
-        AbstractBloomFilter instance2 = new AbstractBloomFilter(1000, 100);
+        BloomFilter instance1 = new BloomFilter(1000, 100);
+        BloomFilter instance2 = new BloomFilter(1000, 100);
 
         for (int i = 0; i < 100; i++) {
             String val = UUID.randomUUID().toString();
@@ -153,8 +153,8 @@ public class BloomFilterTest {
     public void testHashCode() throws UnsupportedEncodingException {
         System.out.println("hashCode");
 
-        AbstractBloomFilter instance1 = new AbstractBloomFilter(1000, 100);
-        AbstractBloomFilter instance2 = new AbstractBloomFilter(1000, 100);
+        BloomFilter instance1 = new BloomFilter(1000, 100);
+        BloomFilter instance2 = new BloomFilter(1000, 100);
 
         assertTrue(instance1.hashCode() == instance2.hashCode());
 
@@ -171,16 +171,16 @@ public class BloomFilterTest {
 
         assertTrue(instance1.hashCode() == instance2.hashCode());
 
-        instance1 = new AbstractBloomFilter(100, 10);
-        instance2 = new AbstractBloomFilter(100, 9);
+        instance1 = new BloomFilter(100, 10);
+        instance2 = new BloomFilter(100, 9);
         assertFalse(instance1.hashCode() == instance2.hashCode());
 
-        instance1 = new AbstractBloomFilter(100, 10);
-        instance2 = new AbstractBloomFilter(99, 9);
+        instance1 = new BloomFilter(100, 10);
+        instance2 = new BloomFilter(99, 9);
         assertFalse(instance1.hashCode() == instance2.hashCode());
 
-        instance1 = new AbstractBloomFilter(100, 10);
-        instance2 = new AbstractBloomFilter(50, 10);
+        instance1 = new BloomFilter(100, 10);
+        instance2 = new BloomFilter(50, 10);
         assertFalse(instance1.hashCode() == instance2.hashCode());
     }
 
@@ -192,25 +192,25 @@ public class BloomFilterTest {
         // These probabilities are taken from the bloom filter probability table at
         // http://pages.cs.wisc.edu/~cao/papers/summary-cache/node8.html
         System.out.println("expectedFalsePositiveProbability");
-        AbstractBloomFilter instance = new AbstractBloomFilter(1000, 100);
+        BloomFilter instance = new BloomFilter(1000, 100);
         double expResult = 0.00819; // m/n=10, k=7
         double result = instance.expectedFalsePositiveProbability();
         assertEquals(instance.getK(), 7);
         assertEquals(expResult, result, 0.000009);
 
-        instance = new AbstractBloomFilter(100, 10);
+        instance = new BloomFilter(100, 10);
         expResult = 0.00819; // m/n=10, k=7
         result = instance.expectedFalsePositiveProbability();
         assertEquals(instance.getK(), 7);
         assertEquals(expResult, result, 0.000009);
 
-        instance = new AbstractBloomFilter(20, 10);
+        instance = new BloomFilter(20, 10);
         expResult = 0.393; // m/n=2, k=1
         result = instance.expectedFalsePositiveProbability();
         assertEquals(1, instance.getK());
         assertEquals(expResult, result, 0.0005);
 
-        instance = new AbstractBloomFilter(110, 10);
+        instance = new BloomFilter(110, 10);
         expResult = 0.00509; // m/n=11, k=8
         result = instance.expectedFalsePositiveProbability();
         assertEquals(8, instance.getK());
@@ -223,7 +223,7 @@ public class BloomFilterTest {
     @Test
     public void testClear() {
         System.out.println("clear");
-        AbstractBloomFilter instance = new AbstractBloomFilter(1000, 100);
+        BloomFilter instance = new BloomFilter(1000, 100);
         for (int i = 0; i < instance.size(); i++)
             instance.setBit(i, true);
         instance.clear();
@@ -238,7 +238,7 @@ public class BloomFilterTest {
     @Test
     public void testAdd() throws Exception {
         System.out.println("add");
-        AbstractBloomFilter instance = new AbstractBloomFilter(1000, 100);
+        BloomFilter instance = new BloomFilter(1000, 100);
 
         for (int i = 0; i < 100; i++) {
             String val = UUID.randomUUID().toString();
@@ -255,7 +255,7 @@ public class BloomFilterTest {
     public void testAddAll() throws Exception {
         System.out.println("addAll");
         List<String> v = new ArrayList<String>();
-        AbstractBloomFilter instance = new AbstractBloomFilter(1000, 100);
+        BloomFilter instance = new BloomFilter(1000, 100);
 
         for (int i = 0; i < 100; i++)
             v.add(UUID.randomUUID().toString());
@@ -273,7 +273,7 @@ public class BloomFilterTest {
     @Test
     public void testContains() throws Exception {
         System.out.println("contains");
-        AbstractBloomFilter instance = new AbstractBloomFilter(10000, 10);
+        BloomFilter instance = new BloomFilter(10000, 10);
 
         for (int i = 0; i < 10; i++) {
             instance.add(Integer.toBinaryString(i));
@@ -291,7 +291,7 @@ public class BloomFilterTest {
     public void testContainsAll() throws Exception {
         System.out.println("containsAll");
         List<String> v = new ArrayList<String>();
-        AbstractBloomFilter instance = new AbstractBloomFilter(1000, 100);
+        BloomFilter instance = new BloomFilter(1000, 100);
 
         for (int i = 0; i < 100; i++) {
             v.add(UUID.randomUUID().toString());
@@ -307,7 +307,7 @@ public class BloomFilterTest {
     @Test
     public void testGetBit() {
         System.out.println("getBit");
-        AbstractBloomFilter instance = new AbstractBloomFilter(1000, 100);
+        BloomFilter instance = new BloomFilter(1000, 100);
         Random r = new Random();
 
         for (int i = 0; i < 100; i++) {
@@ -324,7 +324,7 @@ public class BloomFilterTest {
     public void testSetBit() {
         System.out.println("setBit");
 
-        AbstractBloomFilter instance = new AbstractBloomFilter(1000, 100);
+        BloomFilter instance = new BloomFilter(1000, 100);
         Random r = new Random();
 
         for (int i = 0; i < 100; i++) {
@@ -345,7 +345,7 @@ public class BloomFilterTest {
     public void testSize() {
         System.out.println("size");
         for (int i = 100; i < 1000; i++) {
-            AbstractBloomFilter instance = new AbstractBloomFilter(i, 10);
+            BloomFilter instance = new BloomFilter(i, 10);
             assertEquals(instance.size(), i);
         }
     }
@@ -361,7 +361,7 @@ public class BloomFilterTest {
         for (int j = 10; j < 21; j++) {
             System.out.print(j-9 + "/11");
             List<byte[]> v = new ArrayList<byte[]>();
-            AbstractBloomFilter instance = new AbstractBloomFilter(100*j,100);
+            BloomFilter instance = new BloomFilter(100*j,100);
 
             for (int i = 0; i < 100; i++) {
                 byte[] bytes = new byte[100];
@@ -394,39 +394,39 @@ public class BloomFilterTest {
     public void testGetK() {
         // Numbers are from http://pages.cs.wisc.edu/~cao/papers/summary-cache/node8.html
         System.out.println("testGetK");
-        AbstractBloomFilter instance = null;
+        BloomFilter instance = null;
 
-        instance = new AbstractBloomFilter(2, 1);
+        instance = new BloomFilter(2, 1);
         assertEquals(1, instance.getK());
 
-        instance = new AbstractBloomFilter(3, 1);
+        instance = new BloomFilter(3, 1);
         assertEquals(2, instance.getK());
 
-        instance = new AbstractBloomFilter(4, 1);
+        instance = new BloomFilter(4, 1);
         assertEquals(3, instance.getK());
 
-        instance = new AbstractBloomFilter(5, 1);
+        instance = new BloomFilter(5, 1);
         assertEquals(3, instance.getK());
 
-        instance = new AbstractBloomFilter(6, 1);
+        instance = new BloomFilter(6, 1);
         assertEquals(4, instance.getK());
 
-        instance = new AbstractBloomFilter(7, 1);
+        instance = new BloomFilter(7, 1);
         assertEquals(5, instance.getK());
 
-        instance = new AbstractBloomFilter(8, 1);
+        instance = new BloomFilter(8, 1);
         assertEquals(6, instance.getK());
 
-        instance = new AbstractBloomFilter(9, 1);
+        instance = new BloomFilter(9, 1);
         assertEquals(6, instance.getK());
 
-        instance = new AbstractBloomFilter(10, 1);
+        instance = new BloomFilter(10, 1);
         assertEquals(7, instance.getK());
 
-        instance = new AbstractBloomFilter(11, 1);
+        instance = new BloomFilter(11, 1);
         assertEquals(8, instance.getK());
 
-        instance = new AbstractBloomFilter(12, 1);
+        instance = new BloomFilter(12, 1);
         assertEquals(8, instance.getK());
     }
     
@@ -437,7 +437,7 @@ public class BloomFilterTest {
     public void testContains_GenericType() {
         System.out.println("contains");
         int items = 100;
-        AbstractBloomFilter<String> instance = new AbstractBloomFilter(0.01, items);
+        BloomFilter<String> instance = new BloomFilter(0.01, items);
 
         for (int i = 0; i < items; i++) {
             String s = UUID.randomUUID().toString();
@@ -454,7 +454,7 @@ public class BloomFilterTest {
         System.out.println("contains");
 
         int items = 100;
-        AbstractBloomFilter instance = new AbstractBloomFilter(0.01, items);
+        BloomFilter instance = new BloomFilter(0.01, items);
 
         for (int i = 0; i < items; i++) {
             byte[] bytes = new byte[500];
@@ -471,7 +471,7 @@ public class BloomFilterTest {
     public void testCount() {
         System.out.println("count");
         int expResult = 100;
-        AbstractBloomFilter instance = new AbstractBloomFilter(0.01, expResult);
+        BloomFilter instance = new BloomFilter(0.01, expResult);
         for (int i = 0; i < expResult; i++) {
             byte[] bytes = new byte[100];
             r.nextBytes(bytes);
@@ -480,7 +480,7 @@ public class BloomFilterTest {
         int result = instance.count();
         assertEquals(expResult, result);
 
-        instance = new AbstractBloomFilter(0.01, expResult);
+        instance = new BloomFilter(0.01, expResult);
         for (int i = 0; i < expResult; i++) {
             instance.add(UUID.randomUUID().toString());
         }
